@@ -29,7 +29,6 @@ def test_can_access_to_fields_with_long_name():
     assert field_with_long_name.name == "#Hermanos o conyuges a bordo"
 
 
-# 11
 def test_data_transformed_have_eleven_columns():
     train_visu = Path("data/processed/train_to_visu.csv")
     train_visu.resolve()
