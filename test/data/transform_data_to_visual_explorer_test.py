@@ -19,3 +19,19 @@ def test_data_transformed_not_lose_rows():
     train_visu_data = pd.read_csv(filepath_or_buffer=train_visu)
     train_data = pd.read_csv(filepath_or_buffer=train)
     assert train_visu_data.shape[0] == train_data.shape[0]
+
+
+def test_can_access_to_fields_with_long_name():
+    train_visu = Path("data/processed/train_to_visu.csv")
+    train_visu.resolve()
+    train_visu_data = pd.read_csv(filepath_or_buffer=train_visu)
+    field_with_long_name = train_visu_data["#Hermanos o conyuges a bordo"]
+    assert field_with_long_name.name == "#Hermanos o conyuges a bordo"
+
+
+# 11
+def test_data_transformed_have_eleven_columns():
+    train_visu = Path("data/processed/train_to_visu.csv")
+    train_visu.resolve()
+    train_visu_data = pd.read_csv(filepath_or_buffer=train_visu)
+    assert train_visu_data.shape[1] == 11
