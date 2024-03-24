@@ -14,12 +14,16 @@ PYTHON_INTERPRETER = python
 #################################################################################
 
 ## Install Python Dependencies
-requirements: test_environment
+requirements:
 	@pipenv install -r requirements.txt
 
 ## Make Dataset
-data: requirements
+data:
 	$(PYTHON_INTERPRETER) src/data/download_data_raw.py data/raw 
+
+data_visu:
+	$(PYTHON_INTERPRETER) src/data/transform_data_to_visual_explorer.py data/raw/train.csv data/processed/train_to_visu.csv 
+
 
 ## Delete all compiled Python files
 clean:
@@ -34,9 +38,9 @@ lint:
 create_environment:
 	@pipenv shell
 
-## Test python environment is setup correctly
-test_environment:
-	$(PYTHON_INTERPRETER) test_environment.py
+test:
+	@pytest
+
 
 #################################################################################
 # PROJECT RULES                                                                 #
