@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 
-def test_data_visu_exist_after_run_script():
+def test_data_visu_exists_after_run_script():
     train_visu = Path("data/processed/train_to_visu.csv")
     train_visu.resolve()
     subprocess.run(args=["make", "data_visu"])
