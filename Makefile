@@ -1,10 +1,9 @@
-.PHONY: clean data lint requirements
+.PHONY: clean data lint
 
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
 
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = titanic-ml-project
 PYTHON_INTERPRETER = python
@@ -14,8 +13,11 @@ PYTHON_INTERPRETER = python
 #################################################################################
 
 ## Install Python Dependencies
-requirements:
+install:
 	@pipenv install -r requirements.txt
+
+requirements:
+	@pipenv requirements > requirements.txt
 
 ## Make Dataset
 data:
@@ -35,11 +37,8 @@ lint:
 	flake8 src
 
 ## Set up python interpreter environment
-create_environment:
+environment:
 	@pipenv shell
-
-test:
-	@pytest
 
 
 #################################################################################
