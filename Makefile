@@ -25,7 +25,7 @@ data:
 	$(PYTHON_INTERPRETER) src/data/download_data_raw.py data/raw 
 
 data_visu:
-	$(PYTHON_INTERPRETER) src/data/transform_data_to_visual_explorer.py data/raw/train.csv data/processed/train_to_visu.csv 
+	$(PYTHON_INTERPRETER) src/data/transform_data_for_visual_explorer.py data/raw/train.csv data/processed/train_for_visu.csv 
 
 
 ## Delete all compiled Python files
