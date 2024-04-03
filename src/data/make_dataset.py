@@ -1,7 +1,6 @@
 from pathlib import Path
 import click
 import kaggle
-import logging
 
 
 @click.command

@@ -8,6 +8,16 @@ PROFILE = default
 PROJECT_NAME = titanic-ml-project
 PYTHON_INTERPRETER = python
 
+
+#################################################################################
+# PATHS                                                                         #
+#################################################################################
+
+DATA_RAW_FOLDER = data/raw
+DATA_RAW_TRAIN = data/raw/train.csv
+DATA_VISU = data/interim/train_for_visu.csv
+DATA_TRAIN_NN = data/interim/train_for_nn.csv
+
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
@@ -22,10 +32,13 @@ requirements:
 
 ## Make Dataset
 data:
-	$(PYTHON_INTERPRETER) src/data/download_data_raw.py data/raw 
+	$(PYTHON_INTERPRETER) src/data/make_dataset.py $(DATA_RAW_FOLDER) 
 
 data_visu:
-	$(PYTHON_INTERPRETER) src/data/transform_data_for_visual_explorer.py data/raw/train.csv data/processed/train_for_visu.csv 
+	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
+
+data_train_nn:
+	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_TRAIN_NN) 
 
 
 ## Delete all compiled Python files

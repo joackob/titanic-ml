@@ -1,9 +1,8 @@
 import subprocess
-import os
 import pandas as pd
 from pathlib import Path
 
-path_dst_file = "data/processed/train_for_visu.csv"
+path_dst_file = "data/interim/train_for_visu.csv"
 
 
 def test_data_visu_exists_after_run_script():

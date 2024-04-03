@@ -56,9 +56,8 @@ def main(data_raw_path: Path, data_transformed_path: Path):
             }
         )
     )
-    data_train_to_visu.loc[:, "Rango etario"] = data_train_to_visu.loc[:, "Edad"].apply(
-        rango_etario
-    )
+    data_train_to_visu["Rango etario"] = data_train_to_visu["Edad"].apply(rango_etario)
+
     if not data_transformed_path.parent.is_dir():
         data_transformed_path.parent.mkdir()
     data_train_to_visu.to_csv(path_or_buf=data_transformed_path, index=False)
