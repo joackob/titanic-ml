@@ -16,7 +16,7 @@ PYTHON_INTERPRETER = python
 DATA_RAW_FOLDER = data/raw
 DATA_RAW_TRAIN = data/raw/train.csv
 DATA_VISU = data/interim/train_for_visu.csv
-DATA_TRAIN_NN = data/interim/train_for_nn.csv
+DATA_NNNOOB_FOLDER = data/interim/nnnoob
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -25,7 +25,7 @@ DATA_TRAIN_NN = data/interim/train_for_nn.csv
 ## Install Python Dependencies
 install:
 	@pip install pipenv --user
-	@pipenv install -r requirements.txt
+	@pipenv install
 
 requirements:
 	@pipenv requirements > requirements.txt
@@ -37,8 +37,8 @@ data:
 data_visu:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
 
-data_train_nn:
-	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_TRAIN_NN) 
+data_nnnoob:
+	$(PYTHON_INTERPRETER) src/features/build_data_for_nnnoob.py $(DATA_RAW_TRAIN) $(DATA_NNNOOB_FOLDER) 
 
 
 ## Delete all compiled Python files
