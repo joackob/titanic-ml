@@ -45,8 +45,16 @@ def main(data_raw_path: Path, folder_interim_path: Path):
     # normalizar la tarifa
     mean_fare = data_procesed["Fare"].mean()
     std_fare = data_procesed["Fare"].std()
-
     data_procesed["Fare"] = (data_procesed["Fare"] - mean_fare) / std_fare
+
+    # normalización rapida del resto de los campos
+    data_procesed["Pclass"] = data_procesed["Pclass"] / data_procesed["Pclass"].max()
+    data_procesed["Age"] = data_procesed["Age"] / data_procesed["Age"].max()
+    data_procesed["SibSp"] = data_procesed["SibSp"] / data_procesed["SibSp"].max()
+    data_procesed["Parch"] = data_procesed["Parch"] / data_procesed["Parch"].max()
+    data_procesed["Embarked"] = (
+        data_procesed["Embarked"] / data_procesed["Embarked"].max()
+    )
 
     # balanceamos la cantidad de fallecidos con la cantidad de sobrevivientes
     data_survived = data_procesed.query("Survived == 1")

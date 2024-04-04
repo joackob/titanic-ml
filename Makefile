@@ -29,7 +29,7 @@ data:
 data_visu:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
 
-data_nnnoob:
+data_nn:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_NN_FOLDER) 
 
 

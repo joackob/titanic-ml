@@ -19,12 +19,12 @@ folder_interim_path.resolve()
 
 
 def test_data_train_nn_exist_after_run_make():
-    subprocess.run(args=["make", "data_nnnoob"])
+    subprocess.run(args=["make", "data_nn"])
     assert data_train_path.is_file() and labels_train_path.is_file()
 
 
 def test_data_test_nn_exist_after_run_make():
-    subprocess.run(args=["make", "data_nnnoob"])
+    subprocess.run(args=["make", "data_nn"])
     assert data_test_path.is_file() and labels_test_path.is_file()
 
 
