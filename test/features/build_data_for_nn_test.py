@@ -5,11 +5,11 @@ from pathlib import Path
 
 
 data_raw_path = Path("data/raw/train.csv")
-folder_interim_path = Path("data/interim/nnnoob")
-data_train_path = folder_interim_path / "train_data_nnnoob.csv"
-labels_train_path = folder_interim_path / "train_labels_nnnoob.csv"
-data_test_path = folder_interim_path / "test_data_nnnoob.csv"
-labels_test_path = folder_interim_path / "test_labels_nnnoob.csv"
+folder_interim_path = Path("data/interim")
+data_train_path = folder_interim_path / "train_data_nn.csv"
+labels_train_path = folder_interim_path / "train_labels_nn.csv"
+data_test_path = folder_interim_path / "test_data_nn.csv"
+labels_test_path = folder_interim_path / "test_labels_nn.csv"
 data_raw_path.resolve()
 data_train_path.resolve()
 labels_train_path.resolve()

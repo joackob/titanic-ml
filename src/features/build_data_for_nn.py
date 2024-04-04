@@ -59,10 +59,10 @@ def main(data_raw_path: Path, folder_interim_path: Path):
     )
 
     # guardo los archivos correspondientes a los datos y los labels de entrenamiento
-    data_train_path = folder_interim_path / "train_data_nnnoob.csv"
-    labels_train_path = folder_interim_path / "train_labels_nnnoob.csv"
-    data_test_path = folder_interim_path / "test_data_nnnoob.csv"
-    labels_test_path = folder_interim_path / "test_labels_nnnoob.csv"
+    data_train_path = folder_interim_path / "train_data_nn.csv"
+    labels_train_path = folder_interim_path / "train_labels_nn.csv"
+    data_test_path = folder_interim_path / "test_data_nn.csv"
+    labels_test_path = folder_interim_path / "test_labels_nn.csv"
     data_train_path.resolve()
     labels_train_path.resolve()
     data_test_path.resolve()

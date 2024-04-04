@@ -16,19 +16,11 @@ PYTHON_INTERPRETER = python
 DATA_RAW_FOLDER = data/raw
 DATA_RAW_TRAIN = data/raw/train.csv
 DATA_VISU = data/interim/train_for_visu.csv
-DATA_NNNOOB_FOLDER = data/interim/nnnoob
+DATA_NN_FOLDER = data/interim
 
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
-
-## Install Python Dependencies
-install:
-	@pip install pipenv --user
-	@pipenv install
-
-requirements:
-	@pipenv requirements > requirements.txt
 
 ## Make Dataset
 data:
@@ -38,7 +30,7 @@ data_visu:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
 
 data_nnnoob:
-	$(PYTHON_INTERPRETER) src/features/build_data_for_nnnoob.py $(DATA_RAW_TRAIN) $(DATA_NNNOOB_FOLDER) 
+	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_NN_FOLDER) 
 
 
 ## Delete all compiled Python files
@@ -50,9 +42,19 @@ clean:
 lint:
 	@flake8 src
 
+## Install Python Dependencies
+requirements:
+	@pipenv requirements > requirements.txt
+
+install:
+	@pip install pipenv --user
+	@pipenv install --dev
+
 ## Set up python interpreter environment
 environment: install
 	@pipenv shell
+	@echo "env run in:"
+	@pipenv --venv
 
 ## Run tests
 tests:
