@@ -17,6 +17,7 @@ DATA_RAW_FOLDER = data/raw
 DATA_RAW_TRAIN = data/raw/train.csv
 DATA_VISU = data/interim/train_for_visu.csv
 DATA_NN_FOLDER = data/interim
+MODELS_FOLDER = models
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -32,6 +33,8 @@ data_visu:
 data_nn:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_NN_FOLDER) 
 
+train_nn:
+	$(PYTHON_INTERPRETER) src/models/train_nn_model.py $(DATA_NN_FOLDER) $(MODELS_FOLDER) 
 
 ## Delete all compiled Python files
 clean:
@@ -43,22 +46,17 @@ lint:
 	@flake8 src
 
 ## Install Python Dependencies
-requirements:
-	@pipenv requirements > requirements.txt
-
 install:
 	@pip install pipenv --user
 	@pipenv install --dev
 
 ## Set up python interpreter environment
-environment: install
+environment:
 	@pipenv shell
-	@echo "env run in:"
-	@pipenv --venv
 
 ## Run tests
 tests:
-	@pytest
+	@pipenv run tests
 
 
 #################################################################################
