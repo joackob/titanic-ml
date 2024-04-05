@@ -14,8 +14,6 @@ from pathlib import Path
 @click.argument("folder_interim_path", type=click.Path(path_type=Path, exists=True))
 @click.argument("folder_models_path", type=click.Path(path_type=Path))
 def main(folder_interim_path: Path, folder_models_path: Path):
-    # set TF_ENABLE_ONEDNN_OPTS venv in 0 for tf
-
     (data_train, labels_train, data_test, labels_test) = load_data(folder_interim_path)
 
     NN_INTERIM_LAYERS = 16
