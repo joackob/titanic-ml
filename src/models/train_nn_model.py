@@ -1,9 +1,12 @@
+import os
+
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 import tensorflow as tf
 import keras as kr
 import numpy as np
 import pandas as pd
 import click
-
 from pathlib import Path
 
 
@@ -11,6 +14,7 @@ from pathlib import Path
 @click.argument("folder_interim_path", type=click.Path(path_type=Path, exists=True))
 @click.argument("folder_models_path", type=click.Path(path_type=Path))
 def main(folder_interim_path: Path, folder_models_path: Path):
+    # set TF_ENABLE_ONEDNN_OPTS venv in 0 for tf
 
     (data_train, labels_train, data_test, labels_test) = load_data(folder_interim_path)
 
@@ -36,6 +40,7 @@ def main(folder_interim_path: Path, folder_models_path: Path):
 
     model.fit(data_train, labels_train, batch_size=64, epochs=2, validation_split=0.2)
     model.evaluate(data_test, labels_test, verbose=2)
+
     # save model
     folder_models_path.resolve()
     if not folder_models_path.is_dir():
@@ -69,7 +74,12 @@ def load_data(folder_interim_path: Path):
     data_test = data_test.loc[:, data_test.columns != "PassengerId"].to_numpy(
         dtype=np.float16
     )
+
     labels_train = labels_train["Survived"].to_numpy(dtype=np.float16)
     labels_test = labels_test["Survived"].to_numpy(dtype=np.float16)
 
     return (data_train, labels_train, data_test, labels_test)
+
+
+if __name__ == "__main__":
+    main()
