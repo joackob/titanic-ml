@@ -67,60 +67,17 @@ def main(data_raw_path: Path, folder_interim_path: Path):
     )
 
     # guardo los archivos correspondientes a los datos y los labels de entrenamiento
-    data_train_path = folder_interim_path / "train_data_nn.csv"
-    labels_train_path = folder_interim_path / "train_labels_nn.csv"
-    data_test_path = folder_interim_path / "test_data_nn.csv"
-    labels_test_path = folder_interim_path / "test_labels_nn.csv"
+    data_train_path = folder_interim_path / "data_train_nn.csv"
+    data_test_path = folder_interim_path / "data_test_nn.csv"
     data_train_path.resolve()
-    labels_train_path.resolve()
     data_test_path.resolve()
-    labels_test_path.resolve()
     folder_interim_path.resolve()
 
     if not folder_interim_path.is_dir():
         folder_interim_path.mkdir()
 
-    data_train.loc[
-        :,
-        [
-            "PassengerId",
-            "Pclass",
-            "Sex",
-            "Age",
-            "SibSp",
-            "Parch",
-            "Fare",
-            "Embarked",
-        ],
-    ].to_csv(path_or_buf=data_train_path, index=False)
-    data_train.loc[
-        :,
-        [
-            "PassengerId",
-            "Survived",
-        ],
-    ].to_csv(path_or_buf=labels_train_path, index=False)
-
-    data_test.loc[
-        :,
-        [
-            "PassengerId",
-            "Pclass",
-            "Sex",
-            "Age",
-            "SibSp",
-            "Parch",
-            "Fare",
-            "Embarked",
-        ],
-    ].to_csv(path_or_buf=data_test_path, index=False)
-    data_test.loc[
-        :,
-        [
-            "PassengerId",
-            "Survived",
-        ],
-    ].to_csv(path_or_buf=labels_test_path, index=False)
+    data_train.to_csv(path_or_buf=data_train_path, index=False)
+    data_test.to_csv(path_or_buf=data_test_path, index=False)
 
 
 def age_by_range(age: float) -> int:
