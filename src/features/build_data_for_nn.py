@@ -1,100 +1,101 @@
-import click
+import keras as kr
 import pandas as pd
-import numpy as np
-from pathlib import Path
+import tensorflow as tf
+import pathlib as pl
+import click
 
 
 @click.command
-@click.argument("data_raw_path", type=click.Path(path_type=Path, exists=True))
-@click.argument("folder_interim_path", type=click.Path(path_type=Path))
-def main(data_raw_path: Path, folder_interim_path: Path):
-    # transform data raw in data train and label train
+@click.argument("data_raw_path", type=click.Path(path_type=pl.Path, exists=True))
+@click.argument("data_processed_folder", type=click.Path(path_type=pl.Path))
+def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     data_raw_path.resolve()
+    data_processed_folder.resolve()
+    build_data_for_nn(data_raw_path, data_processed_folder)
+
+
+def build_data_for_nn(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     data_raw = pd.read_csv(filepath_or_buffer=data_raw_path)
-    data_procesed = (
-        data_raw.copy()
-        .loc[
-            :,
-            [
-                "PassengerId",
-                "Survived",
-                "Pclass",
-                "Sex",
-                "Age",
-                "SibSp",
-                "Parch",
-                "Fare",
-                "Embarked",
-            ],
-        ]
-        .replace(
-            to_replace={
-                "Sex": {"male": 0, "female": 1},
-                "Embarked": {
-                    "C": 0,
-                    "Q": 1,
-                    "S": 2,
-                },
-            }
-        )
+    features = data_raw.copy().loc[
+        :,
+        [
+            "Pclass",
+            "Sex",
+            "Age",
+            "SibSp",
+            "Parch",
+            "Fare",
+            "Embarked",
+        ],
+    ]
+
+    features.loc[features["Embarked"].isna(), "Embarked"] = "D"
+    labels = data_raw.copy().pop(item="Survived")
+
+    features = features.astype(dtype={"Sex": "string", "Embarked": "string"})
+
+    inputs = {
+        "Pclass": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Pclass"],
+            name="Pclass",
+        ),
+        "Sex": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Sex"],
+            name="Sex",
+        ),
+        "Age": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Age"],
+            name="Age",
+        ),
+        "SibSp": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["SibSp"],
+            name="SibSp",
+        ),
+        "Parch": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Parch"],
+            name="Parch",
+        ),
+        "Fare": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Fare"],
+            name="Fare",
+        ),
+        "Embarked": kr.Input(
+            shape=(1,),
+            dtype=features.dtypes["Embarked"],
+            name="Embarked",
+        ),
+    }
+
+    pclass_output = kr.layers.CategoryEncoding(num_tokens=3)
+    gender_output = kr.layers.StringLookup(vocabulary=features["Sex"].unique())
+    age_output = kr.layers.Discretization(bin_boundaries=[0, 6, 12, 18, 26, 59])
+    sibsp_output = kr.layers.Normalization()
+    parch_output = kr.layers.Normalization()
+    fare_output = kr.layers.Normalization()
+    embarked_output = kr.layers.StringLookup(vocabulary=features["Embarked"].unique())
+
+    outputs = {
+        "Pclass": pclass_output(inputs["Pclass"]),
+        "Sex": gender_output(inputs["Sex"]),
+        "Age": age_output(inputs["Age"]),
+        "SibSp": sibsp_output(inputs["SibSp"]),
+        "Parch": parch_output(inputs["Parch"]),
+        "Fare": fare_output(inputs["Fare"]),
+        "Embarked": embarked_output(inputs["Embarked"]),
+    }
+
+    preprocessing_model = kr.Model(inputs, outputs)
+    features_processed = preprocessing_model(dict(features))
+    dataset = tf.data.Dataset.from_tensor_slices(
+        tensors=(dict(features_processed), labels)
     )
-
-    # categorizo la edad en rangos
-    data_procesed["Age"] = data_procesed["Age"].apply(age_by_range)
-
-    # normalizar la tarifa
-    mean_fare = data_procesed["Fare"].mean()
-    std_fare = data_procesed["Fare"].std()
-    data_procesed["Fare"] = (data_procesed["Fare"] - mean_fare) / std_fare
-
-    # normalización rapida del resto de los campos
-    data_procesed["Pclass"] = data_procesed["Pclass"] / data_procesed["Pclass"].max()
-    data_procesed["Age"] = data_procesed["Age"] / data_procesed["Age"].max()
-    data_procesed["SibSp"] = data_procesed["SibSp"] / data_procesed["SibSp"].max()
-    data_procesed["Parch"] = data_procesed["Parch"] / data_procesed["Parch"].max()
-    data_procesed["Embarked"] = (
-        data_procesed["Embarked"] / data_procesed["Embarked"].max()
-    )
-
-    # balanceamos la cantidad de fallecidos con la cantidad de sobrevivientes
-    data_survived = data_procesed.query("Survived == 1")
-    data_no_survived = data_procesed.query("Survived == 0")
-    data_train = pd.concat(
-        objs=[data_survived, data_no_survived.sample(n=len(data_survived))]
-    )
-    data_test = pd.concat(
-        objs=[data_survived, data_no_survived.sample(n=len(data_survived))]
-    )
-
-    # guardo los archivos correspondientes a los datos y los labels de entrenamiento
-    data_train_path = folder_interim_path / "data_train_nn.csv"
-    data_test_path = folder_interim_path / "data_test_nn.csv"
-    data_train_path.resolve()
-    data_test_path.resolve()
-    folder_interim_path.resolve()
-
-    if not folder_interim_path.is_dir():
-        folder_interim_path.mkdir()
-
-    data_train.to_csv(path_or_buf=data_train_path, index=False)
-    data_test.to_csv(path_or_buf=data_test_path, index=False)
-
-
-def age_by_range(age: float) -> int:
-    if np.isnan(age):
-        return -1
-    elif age >= 0 and age < 6:
-        return 0
-    elif age >= 6 and age < 12:
-        return 1
-    elif age >= 12 and age < 18:
-        return 2
-    elif age >= 18 and age < 26:
-        return 3
-    elif age > 26 and age < 59:
-        return 4
-    else:
-        return 5
+    dataset.save(path=str(data_processed_folder))
 
 
 if __name__ == "__main__":

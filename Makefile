@@ -18,6 +18,7 @@ DATA_RAW_TRAIN = data/raw/train.csv
 DATA_VISU = data/interim/train_for_visu.csv
 DATA_NN_FOLDER = data/interim
 MODELS_FOLDER = models
+DATA_PROCESSED_FOLDER = data/processed
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -31,10 +32,7 @@ data_visu:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
 
 data_nn:
-	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_NN_FOLDER) 
-
-train_nn:
-	$(PYTHON_INTERPRETER) src/models/train_nn_model.py $(DATA_NN_FOLDER) $(MODELS_FOLDER) 
+	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_PROCESSED_FOLDER) 
 
 ## Delete all compiled Python files
 clean:

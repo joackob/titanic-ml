@@ -1,15 +1,19 @@
 import click
 import pandas as pd
 import numpy as np
-from pathlib import Path
+import pathlib as pl
 
 
 @click.command
-@click.argument("data_raw_path", type=click.Path(path_type=Path, exists=True))
-@click.argument("data_transformed_path", type=click.Path(path_type=Path))
-def main(data_raw_path: Path, data_transformed_path: Path):
+@click.argument("data_raw_path", type=click.Path(path_type=pl.Path, exists=True))
+@click.argument("data_processed_path", type=click.Path(path_type=pl.Path))
+def main(data_raw_path: pl.Path, data_processed_path: pl.Path):
     data_raw_path.resolve()
-    data_transformed_path.resolve()
+    data_processed_path.resolve()
+    build_data_for_visu(data_raw_path, data_processed_path)
+
+
+def build_data_for_visu(data_raw_path: pl.Path, data_processed_path: pl.Path):
     data_train = pd.read_csv(filepath_or_buffer=data_raw_path)
     data_train_to_visu = (
         data_train.loc[
@@ -58,9 +62,9 @@ def main(data_raw_path: Path, data_transformed_path: Path):
     )
     data_train_to_visu["Rango etario"] = data_train_to_visu["Edad"].apply(rango_etario)
 
-    if not data_transformed_path.parent.is_dir():
-        data_transformed_path.parent.mkdir()
-    data_train_to_visu.to_csv(path_or_buf=data_transformed_path, index=False)
+    if not data_processed_path.parent.is_dir():
+        data_processed_path.parent.mkdir()
+    data_train_to_visu.to_csv(path_or_buf=data_processed_path, index=False)
 
 
 def rango_etario(edad: float) -> str:

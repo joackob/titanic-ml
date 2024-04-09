@@ -1,16 +1,20 @@
-from pathlib import Path
-import subprocess as sp
+import pathlib as pl
+from src.data.make_dataset import make_dataset
 
 
 def test_kaggle_json_exist():
-    home = Path.home()
+    home = pl.Path.home()
     kaggle_cred = home / ".kaggle" / "kaggle.json"
     kaggle_cred.resolve()
     assert kaggle_cred.is_file()
 
 
 def test_data_exists_after_run_script_for_download():
-    train = Path("data/raw/train.csv")
-    train.resolve()
-    sp.run(args=["make", "data"])
-    assert train.is_file()
+    data_raw_folder_path = pl.Path("data/raw")
+    data_raw_folder_path.resolve()
+
+    make_dataset(data_raw_folder_path)
+
+    data_raw_path = pl.Path("data/raw/train.csv")
+    data_raw_path.resolve()
+    assert data_raw_path.is_file()
