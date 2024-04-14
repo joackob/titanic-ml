@@ -1,6 +1,11 @@
-import keras as kr
-import pandas as pd
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 import tensorflow as tf
+import pandas as pd
+import keras as kr
 import pathlib as pl
 import click
 
@@ -15,10 +20,12 @@ def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
 
 
 def build_data_for_nn(data_raw_path: pl.Path, data_processed_folder: pl.Path):
-    data_raw = pd.read_csv(filepath_or_buffer=data_raw_path)
-    features = data_raw.copy().loc[
+    titanic_data = pd.read_csv(filepath_or_buffer=data_raw_path)
+    titanic_data.loc[titanic_data["Embarked"].isna(), "Embarked"] = "D"
+    titanic_data = titanic_data.loc[
         :,
         [
+            "Survived",
             "Pclass",
             "Sex",
             "Age",
@@ -29,73 +36,85 @@ def build_data_for_nn(data_raw_path: pl.Path, data_processed_folder: pl.Path):
         ],
     ]
 
-    features.loc[features["Embarked"].isna(), "Embarked"] = "D"
-    labels = data_raw.copy().pop(item="Survived")
+    titanic_data_validation = titanic_data.sample(frac=0.2)
+    titanic_data_train = titanic_data.drop(titanic_data_validation.index)
 
-    features = features.astype(dtype={"Sex": "string", "Embarked": "string"})
-
-    inputs = {
-        "Pclass": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Pclass"],
-            name="Pclass",
-        ),
-        "Sex": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Sex"],
-            name="Sex",
-        ),
-        "Age": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Age"],
-            name="Age",
-        ),
-        "SibSp": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["SibSp"],
-            name="SibSp",
-        ),
-        "Parch": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Parch"],
-            name="Parch",
-        ),
-        "Fare": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Fare"],
-            name="Fare",
-        ),
-        "Embarked": kr.Input(
-            shape=(1,),
-            dtype=features.dtypes["Embarked"],
-            name="Embarked",
-        ),
-    }
-
-    pclass_output = kr.layers.CategoryEncoding(num_tokens=3)
-    gender_output = kr.layers.StringLookup(vocabulary=features["Sex"].unique())
-    age_output = kr.layers.Discretization(bin_boundaries=[0, 6, 12, 18, 26, 59])
-    sibsp_output = kr.layers.Normalization()
-    parch_output = kr.layers.Normalization()
-    fare_output = kr.layers.Normalization()
-    embarked_output = kr.layers.StringLookup(vocabulary=features["Embarked"].unique())
-
-    outputs = {
-        "Pclass": pclass_output(inputs["Pclass"]),
-        "Sex": gender_output(inputs["Sex"]),
-        "Age": age_output(inputs["Age"]),
-        "SibSp": sibsp_output(inputs["SibSp"]),
-        "Parch": parch_output(inputs["Parch"]),
-        "Fare": fare_output(inputs["Fare"]),
-        "Embarked": embarked_output(inputs["Embarked"]),
-    }
-
-    preprocessing_model = kr.Model(inputs, outputs)
-    features_processed = preprocessing_model(dict(features))
-    dataset = tf.data.Dataset.from_tensor_slices(
-        tensors=(dict(features_processed), labels)
+    titanic_dataset_train = dataframe_to_dataset(
+        dataframe=titanic_data_train, target_col="Survived"
     )
-    dataset.save(path=str(data_processed_folder))
+    titanic_dataset_validation = dataframe_to_dataset(
+        dataframe=titanic_data_validation, target_col="Survived"
+    )
+
+    titanic_dataset_train = titanic_dataset_train.batch(batch_size=32)
+    titanic_dataset_validation = titanic_dataset_validation.batch(batch_size=32)
+
+    feature_space = kr.utils.FeatureSpace(
+        features={
+            "Pclass": kr.utils.FeatureSpace.integer_categorical(num_oov_indices=0),
+            "Sex": kr.utils.FeatureSpace.string_categorical(num_oov_indices=0),
+            "Age": kr.utils.FeatureSpace.float_discretized(num_bins=8),
+            "SibSp": kr.utils.FeatureSpace.float_normalized(),
+            "Parch": kr.utils.FeatureSpace.float_normalized(),
+            "Fare": kr.utils.FeatureSpace.float_normalized(),
+            "Embarked": kr.utils.FeatureSpace.string_categorical(num_oov_indices=0),
+        },
+        crosses=[
+            kr.utils.FeatureSpace.cross(
+                feature_names=(
+                    "Sex",
+                    "Age",
+                ),
+                crossing_dim=16,
+            ),
+        ],
+        output_mode="concat",
+    )
+
+    titanic_dataset_train_without_target = titanic_dataset_train.map(
+        map_func=lambda data, _: data
+    )
+
+    feature_space.adapt(dataset=titanic_dataset_train_without_target)
+
+    preprocessed_dataset_train = titanic_dataset_train.map(
+        map_func=lambda data, target: (feature_space(data), target)
+    )
+    preprocessed_dataset_validation = titanic_dataset_validation.map(
+        map_func=lambda data, target: (feature_space(data), target)
+    )
+
+    if not data_processed_folder.is_dir():
+        data_processed_folder.mkdir()
+
+    feature_space_path = data_processed_folder / "feature_space.keras"
+    preprocessed_dataset_train_path = data_processed_folder / "train.keras"
+    preprocessed_dataset_validation_path = data_processed_folder / "val.keras"
+
+    feature_space_path.resolve()
+    preprocessed_dataset_train_path.resolve()
+    preprocessed_dataset_validation_path.resolve()
+
+    feature_space.save(
+        filepath=feature_space_path.__str__(),
+    )
+    preprocessed_dataset_train.save(
+        path=preprocessed_dataset_train_path.__str__(),
+    )
+    preprocessed_dataset_validation.save(
+        path=preprocessed_dataset_validation_path.__str__()
+    )
+
+
+def dataframe_to_dataset(
+    dataframe: pd.DataFrame | pd.Series,
+    target_col: str,
+) -> tf.data.Dataset:
+    dataframe = dataframe.copy()
+    labels = dataframe.pop(item=target_col)
+    ds = tf.data.Dataset.from_tensor_slices(tensors=(dict(dataframe), labels))
+    ds = ds.shuffle(buffer_size=dataframe.shape[0])
+    return ds
 
 
 if __name__ == "__main__":
