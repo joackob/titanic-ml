@@ -16,12 +16,39 @@ import click
 def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     data_raw_path.resolve()
     data_processed_folder.resolve()
-    build_data_for_nn(data_raw_path, data_processed_folder)
 
-
-def build_data_for_nn(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     titanic_data = pd.read_csv(filepath_or_buffer=data_raw_path)
     titanic_data.loc[titanic_data["Embarked"].isna(), "Embarked"] = "D"
+
+    (
+        feature_space,
+        dataset_train,
+        dataset_validation,
+    ) = build_data_for_nn(titanic_data)
+
+    if not data_processed_folder.is_dir():
+        data_processed_folder.mkdir()
+
+    feature_space_path = data_processed_folder / "feature_space.keras"
+    dataset_train_path = data_processed_folder / "train.keras"
+    dataset_validation_path = data_processed_folder / "val.keras"
+
+    feature_space_path.resolve()
+    dataset_train_path.resolve()
+    dataset_validation_path.resolve()
+
+    feature_space.save(
+        filepath=feature_space_path.__str__(),
+    )
+    dataset_train.save(
+        path=dataset_train_path.__str__(),
+    )
+    dataset_validation.save(
+        path=dataset_validation_path.__str__(),
+    )
+
+
+def build_data_for_nn(titanic_data: pd.DataFrame):
     titanic_data = titanic_data.loc[
         :,
         [
@@ -84,25 +111,10 @@ def build_data_for_nn(data_raw_path: pl.Path, data_processed_folder: pl.Path):
         map_func=lambda data, target: (feature_space(data), target)
     )
 
-    if not data_processed_folder.is_dir():
-        data_processed_folder.mkdir()
-
-    feature_space_path = data_processed_folder / "feature_space.keras"
-    preprocessed_dataset_train_path = data_processed_folder / "train.keras"
-    preprocessed_dataset_validation_path = data_processed_folder / "val.keras"
-
-    feature_space_path.resolve()
-    preprocessed_dataset_train_path.resolve()
-    preprocessed_dataset_validation_path.resolve()
-
-    feature_space.save(
-        filepath=feature_space_path.__str__(),
-    )
-    preprocessed_dataset_train.save(
-        path=preprocessed_dataset_train_path.__str__(),
-    )
-    preprocessed_dataset_validation.save(
-        path=preprocessed_dataset_validation_path.__str__()
+    return (
+        feature_space,
+        preprocessed_dataset_train,
+        preprocessed_dataset_validation,
     )
 
 

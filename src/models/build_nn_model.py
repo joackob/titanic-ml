@@ -3,88 +3,95 @@ import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import keras as kr
-
-# import tensorflow.python.keras as kr
-import numpy as np
+import tensorflow as tf
 import pandas as pd
+import pathlib as pl
 import click
-from pathlib import Path
 
 
 @click.command
-@click.argument("data_raw_path", type=click.Path(path_type=Path, exists=True))
-@click.argument("folder_models_path", type=click.Path(path_type=Path))
-def main(data_raw_path: Path, folder_models_path: Path):
-    # transform data raw in data train and label train
-    data_raw_path.resolve()
-    data_raw = pd.read_csv(filepath_or_buffer=data_raw_path)
-    data_procesed = data_raw.copy().loc[
-        :,
-        [
-            "Survived",
-            "Pclass",
-            "Sex",
-            "Age",
-            "SibSp",
-            "Parch",
-            "Fare",
-            "Embarked",
-        ],
-    ]
-
-    data_target = data_procesed.pop(item="Survived")
-
-    inputs, outputs = build_pre_processing_model()
-    pre_processing_model = kr.Model(inputs=inputs, outputs=outputs)
-    fs_dense_layer = kr.layers.Dense(units=8, activation=kr.activations.relu)(
-        pre_processing_model
+@click.argument("dataset_folder", type=click.Path(path_type=pl.Path, exists=True))
+@click.argument("models_folder", type=click.Path(path_type=pl.Path))
+def main(dataset_folder: pl.Path, models_folder: pl.Path):
+    dataset_folder.resolve()
+    feature_space_path = dataset_folder / "feature_space.keras"
+    dataset_train_path = dataset_folder / "train.keras"
+    dataset_validation_path = dataset_folder / "val.keras"
+    feature_space_path.resolve()
+    dataset_train_path.resolve()
+    dataset_validation_path.resolve()
+    feature_space = kr.models.load_model(filepath=feature_space_path)
+    titanic_dataset_train = tf.data.Dataset.load(
+        path=dataset_train_path.__str__(),
     )
-    sd_dense_layer = kr.layers.Dense(units=8, activation=kr.activations.relu)(
-        fs_dense_layer
+    titanic_dataset_validation = tf.data.Dataset.load(
+        path=dataset_validation_path.__str__()
     )
-    th_dense_layer = kr.layers.Dense(units=2, activation=kr.activations.softmax)(
-        sd_dense_layer
+    training_model, inference_model = build_nn_model(
+        feature_space,
+        titanic_dataset_train,
+        titanic_dataset_validation,
     )
 
-    model = kr.Model(inputs, th_dense_layer)
+    models_folder.resolve()
+    if not models_folder.is_dir():
+        models_folder.mkdir()
 
-    model.summary()
+    training_model_path = models_folder / "training_model.keras"
+    inference_model_path = models_folder / "inference_model.keras"
+    training_model_path.resolve()
+    inference_model_path.resolve()
+
+    training_model.save(filepath=training_model_path)
+    inference_model.save(filepath=inference_model_path)
 
 
-def build_pre_processing_model():
-    # https://www.tensorflow.org/tutorials/structured_data/feature_columns?hl=es-419
-    # https://www.tensorflow.org/guide/migrate/migrating_feature_columns
-    # En recientes versiones, Keras propone que el preprocesamiento de los datos
-    # sea mediante capas, creando un modelo en si mismo
-    inputs = {
-        "Pclass": kr.Input(shape=(), dtype="int32"),
-        "Sex": kr.Input(shape=(), dtype="string"),
-        "Age": kr.Input(shape=(), dtype="float32"),
-        "SibSp": kr.Input(shape=(2, 1), dtype="int32"),
-        "Parch": kr.Input(shape=(2, 1), dtype="int32"),
-        "Fare": kr.Input(shape=(), dtype="float32"),
-        "Embarked": kr.Input(shape=(), dtype="int32"),
-    }
+def build_nn_model(
+    feature_space: kr.utils.FeatureSpace,
+    titanic_dataset_train: tf.data.Dataset,
+    titanic_dataset_validation: tf.data.Dataset,
+):
+    dict_inputs = feature_space.get_inputs()
+    encoded_features = feature_space.get_encoded_features()
 
-    pclass_output = kr.layers.CategoryEncoding(num_tokens=3)
-    gender_output = kr.layers.StringLookup(max_tokens=2, output_mode="one_hot")
-    age_output = kr.layers.Discretization(bin_boundaries=[0, 6, 12, 18, 26, 59])
-    sibsp_output = kr.layers.Normalization(mean=0, variance=1)
-    parch_output = kr.layers.Normalization(mean=0, variance=1)
-    fare_output = kr.layers.Normalization(mean=0, variance=1)
-    embarked_output = kr.layers.CategoryEncoding(num_tokens=3)
+    layers = kr.models.Sequential(
+        layers=[
+            kr.layers.Dense(units=32, activation=kr.activations.relu),
+            kr.layers.Dense(units=32, activation=kr.activations.relu),
+            kr.layers.Dense(units=32, activation=kr.activations.relu),
+            kr.layers.Dense(units=32, activation=kr.activations.relu),
+            kr.layers.Dense(units=32, activation=kr.activations.relu),
+            kr.layers.Dropout(rate=0.5),
+            kr.layers.Dense(units=1, activation=kr.activations.sigmoid),
+        ]
+    )
 
-    outputs = {
-        "Pclass": pclass_output(inputs["Pclass"]),
-        "Sex": gender_output(inputs["Sex"]),
-        "Age": age_output(inputs["Age"]),
-        "SibSp": sibsp_output(inputs["SibSp"]),
-        "Parch": parch_output(inputs["Parch"]),
-        "Fare": fare_output(inputs["Fare"]),
-        "Embarked": embarked_output(inputs["Embarked"]),
-    }
+    predictions = layers(encoded_features)
 
-    return (inputs, outputs)
+    training_model = kr.Model(
+        inputs=encoded_features,
+        outputs=predictions,
+    )
+    training_model.compile(
+        optimizer=kr.optimizers.Adam(),
+        loss=kr.losses.binary_crossentropy,
+        metrics=[kr.metrics.BinaryAccuracy()],
+    )
+    inference_model = kr.Model(
+        inputs=dict_inputs,
+        outputs=predictions,
+    )
+    training_model.fit(
+        titanic_dataset_train,
+        epochs=20,
+        validation_data=titanic_dataset_validation,
+        verbose=2,
+    )
+
+    return (
+        training_model,
+        inference_model,
+    )
 
 
 if __name__ == "__main__":

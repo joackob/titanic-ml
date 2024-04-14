@@ -34,6 +34,9 @@ data_visu:
 data_nn:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_PROCESSED_FOLDER) 
 
+nn_model:
+	$(PYTHON_INTERPRETER) src/models/build_nn_model.py $(DATA_PROCESSED_FOLDER) $(MODELS_FOLDER) 
+
 ## Delete all compiled Python files
 clean:
 	@find . -type f -name "*.py[co]" -delete
