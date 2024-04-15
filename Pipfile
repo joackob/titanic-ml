@@ -12,6 +12,7 @@ seaborn = "*"
 click = "*"
 kaggle = "*"
 tensorflow = "*"
+src = {file = ".", editable = true}
 
 [dev-packages]
 pytest = "*"
