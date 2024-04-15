@@ -17,7 +17,7 @@ import click
     type=click.Path(path_type=pl.Path, exists=True),
 )
 @click.argument(
-    "model_inference_path",
+    "inference_model_path",
     type=click.Path(path_type=pl.Path, exists=True),
 )
 @click.argument(
@@ -66,9 +66,13 @@ def build_predictions(
             "Embarked",
         ],
     ]
-    ids = data.drop(labels="PassengerId")
+    ids = data.pop(item="PassengerId")
     dataset = tf.data.Dataset.from_tensors(tensors=dict(data))
     predictions = inference_model.predict(x=dataset)
     predictions = np.reshape(a=predictions, newshape=len(predictions))
     predictions = np.where(predictions > 0.5, 1, 0)
     return pd.DataFrame(data={"PassengerId": ids, "Survived": predictions})
+
+
+if __name__ == "__main__":
+    main()
