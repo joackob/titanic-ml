@@ -15,8 +15,8 @@ import click
 def main(dataset_folder: pl.Path, models_folder: pl.Path):
     dataset_folder.resolve()
     feature_space_path = dataset_folder / "feature_space.keras"
-    dataset_train_path = dataset_folder / "train.keras"
-    dataset_validation_path = dataset_folder / "val.keras"
+    dataset_train_path = dataset_folder / "train_dataset.keras"
+    dataset_validation_path = dataset_folder / "validation_dataset.keras"
     feature_space_path.resolve()
     dataset_train_path.resolve()
     dataset_validation_path.resolve()
@@ -27,7 +27,7 @@ def main(dataset_folder: pl.Path, models_folder: pl.Path):
     titanic_dataset_validation = tf.data.Dataset.load(
         path=dataset_validation_path.__str__()
     )
-    training_model, inference_model = build_nn_model(
+    inference_model = build_inference_model(
         feature_space,
         titanic_dataset_train,
         titanic_dataset_validation,
@@ -37,19 +37,16 @@ def main(dataset_folder: pl.Path, models_folder: pl.Path):
     if not models_folder.is_dir():
         models_folder.mkdir()
 
-    training_model_path = models_folder / "training_model.keras"
     inference_model_path = models_folder / "inference_model.keras"
-    training_model_path.resolve()
     inference_model_path.resolve()
-    training_model.save(filepath=training_model_path)
     inference_model.save(filepath=inference_model_path)
 
 
-def build_nn_model(
+def build_inference_model(
     feature_space: kr.utils.FeatureSpace,
     titanic_dataset_train: tf.data.Dataset,
     titanic_dataset_validation: tf.data.Dataset,
-):
+) -> kr.Model:
     dict_inputs = feature_space.get_inputs()
     encoded_features = feature_space.get_encoded_features()
 
@@ -87,10 +84,7 @@ def build_nn_model(
         verbose=2,
     )
 
-    return (
-        training_model,
-        inference_model,
-    )
+    return inference_model
 
 
 if __name__ == "__main__":

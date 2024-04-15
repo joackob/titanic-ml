@@ -36,11 +36,11 @@ data_visu:
 data_nn:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_PROCESSED_FOLDER) 
 
-inference_model:
+inference_model: data_nn
 	$(PYTHON_INTERPRETER) src/models/build_inference_model.py $(DATA_PROCESSED_FOLDER) $(MODELS_FOLDER) 
 
 ## Make Predictions
-predictions:
+predictions: inference_model
 	$(PYTHON_INTERPRETER) src/models/build_predictions.py $(DATA_RAW_TEST) $(MODEL_INFERENCE) $(DATA_PROCESSED_FOLDER) 
 
 

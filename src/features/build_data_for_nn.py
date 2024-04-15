@@ -28,8 +28,8 @@ def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
         data_processed_folder.mkdir()
 
     feature_space_path = data_processed_folder / "feature_space.keras"
-    dataset_train_path = data_processed_folder / "train.keras"
-    dataset_validation_path = data_processed_folder / "val.keras"
+    dataset_train_path = data_processed_folder / "train_dataset.keras"
+    dataset_validation_path = data_processed_folder / "validation_dataset.keras"
 
     feature_space_path.resolve()
     dataset_train_path.resolve()

@@ -14,5 +14,13 @@ data_raw = pd.read_csv(filepath_or_buffer=data_raw_path)
 
 
 ## unit test
-def test_build_data_with_same_dims_data_raw():
-    assert len(dataset_train) + len(dataset_validation) == len(data_raw)
+def test_build_data_train_in_batchs():
+    batch_size = 32
+    for data, _ in dataset_train.take(count=1):
+        assert len(data) == batch_size
+
+
+def test_build_data_validation_in_batchs():
+    batch_size = 32
+    for data, _ in dataset_validation.take(count=1):
+        assert len(data) == batch_size
