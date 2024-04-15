@@ -30,17 +30,17 @@ DATA_PROCESSED_FOLDER = data/processed
 data:
 	$(PYTHON_INTERPRETER) src/data/make_dataset.py $(DATA_RAW_FOLDER) 
 
-data_visu:
+data_visu: data
 	$(PYTHON_INTERPRETER) src/features/build_data_for_visu.py $(DATA_RAW_TRAIN) $(DATA_VISU) 
 
-data_nn:
+data_nn: data
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_PROCESSED_FOLDER) 
 
-inference_model: 
+inference_model: data_nn 
 	$(PYTHON_INTERPRETER) src/models/build_inference_model.py $(DATA_PROCESSED_FOLDER) $(MODELS_FOLDER) 
 
 ## Make Predictions
-predictions:
+predictions: inference_model
 	$(PYTHON_INTERPRETER) src/models/build_predictions.py $(DATA_RAW_TEST) $(MODEL_INFERENCE) $(DATA_PROCESSED_FOLDER) 
 
 
