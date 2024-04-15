@@ -15,9 +15,11 @@ PYTHON_INTERPRETER = python
 
 DATA_RAW_FOLDER = data/raw
 DATA_RAW_TRAIN = data/raw/train.csv
+DATA_RAW_TEST = data/raw/test.csv
 DATA_VISU = data/interim/train_for_visu.csv
-DATA_NN_FOLDER = data/interim
+DATA_INTERIM_FOLDER = data/interim
 MODELS_FOLDER = models
+MODEL_INFERENCE = models/inference_model.keras
 DATA_PROCESSED_FOLDER = data/processed
 
 #################################################################################
@@ -34,8 +36,13 @@ data_visu:
 data_nn:
 	$(PYTHON_INTERPRETER) src/features/build_data_for_nn.py $(DATA_RAW_TRAIN) $(DATA_PROCESSED_FOLDER) 
 
-nn_model:
-	$(PYTHON_INTERPRETER) src/models/build_nn_model.py $(DATA_PROCESSED_FOLDER) $(MODELS_FOLDER) 
+inference_model:
+	$(PYTHON_INTERPRETER) src/models/build_inference_model.py $(DATA_PROCESSED_FOLDER) $(MODELS_FOLDER) 
+
+## Make Predictions
+predictions:
+	$(PYTHON_INTERPRETER) src/models/build_predictions.py $(DATA_RAW_TEST) $(MODEL_INFERENCE) $(DATA_PROCESSED_FOLDER) 
+
 
 ## Delete all compiled Python files
 clean:
