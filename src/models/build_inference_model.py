@@ -41,7 +41,6 @@ def main(dataset_folder: pl.Path, models_folder: pl.Path):
     inference_model_path = models_folder / "inference_model.keras"
     training_model_path.resolve()
     inference_model_path.resolve()
-
     training_model.save(filepath=training_model_path)
     inference_model.save(filepath=inference_model_path)
 

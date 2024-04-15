@@ -44,7 +44,7 @@ def main(
 
     predictions_path = predictions_folder / "predictions.csv"
     predictions_path.resolve()
-    predictions.to_csv(path_or_buf=predictions_path)
+    predictions.to_csv(path_or_buf=predictions_path, index=False)
 
 
 def build_predictions(

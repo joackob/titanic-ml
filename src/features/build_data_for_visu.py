@@ -6,17 +6,26 @@ import pathlib as pl
 
 @click.command
 @click.argument("data_raw_path", type=click.Path(path_type=pl.Path, exists=True))
-@click.argument("data_processed_path", type=click.Path(path_type=pl.Path))
-def main(data_raw_path: pl.Path, data_processed_path: pl.Path):
+@click.argument("data_processed_folder", type=click.Path(path_type=pl.Path))
+def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     data_raw_path.resolve()
+    data_raw = pd.read_csv(filepath_or_buffer=data_raw_path)
+
+    data_processed = build_data_for_visu(data_raw)
+
+    data_processed_folder.resolve()
+    if not data_processed_folder.is_dir():
+        data_processed_folder.mkdir()
+
+    data_processed_path = data_processed_folder / "data_for_visu.csv"
     data_processed_path.resolve()
-    build_data_for_visu(data_raw_path, data_processed_path)
+    data_processed.to_csv(path_or_buf=data_processed_path, index=False)
 
 
-def build_data_for_visu(data_raw_path: pl.Path, data_processed_path: pl.Path):
-    data_train = pd.read_csv(filepath_or_buffer=data_raw_path)
-    data_train_to_visu = (
-        data_train.loc[
+def build_data_for_visu(data_raw: pd.DataFrame) -> pd.DataFrame:
+    data = data_raw.copy()
+    data = (
+        data.loc[
             :,
             [
                 "PassengerId",
@@ -60,11 +69,8 @@ def build_data_for_visu(data_raw_path: pl.Path, data_processed_path: pl.Path):
             }
         )
     )
-    data_train_to_visu["Rango etario"] = data_train_to_visu["Edad"].apply(rango_etario)
-
-    if not data_processed_path.parent.is_dir():
-        data_processed_path.parent.mkdir()
-    data_train_to_visu.to_csv(path_or_buf=data_processed_path, index=False)
+    data["Rango etario"] = data["Edad"].apply(rango_etario)
+    return data
 
 
 def rango_etario(edad: float) -> str:

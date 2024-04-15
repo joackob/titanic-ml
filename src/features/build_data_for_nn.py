@@ -15,10 +15,7 @@ import click
 @click.argument("data_processed_folder", type=click.Path(path_type=pl.Path))
 def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
     data_raw_path.resolve()
-    data_processed_folder.resolve()
-
     titanic_data = pd.read_csv(filepath_or_buffer=data_raw_path)
-    titanic_data.loc[titanic_data["Embarked"].isna(), "Embarked"] = "D"
 
     (
         feature_space,
@@ -26,6 +23,7 @@ def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
         dataset_validation,
     ) = build_data_for_nn(titanic_data)
 
+    data_processed_folder.resolve()
     if not data_processed_folder.is_dir():
         data_processed_folder.mkdir()
 
@@ -49,7 +47,9 @@ def main(data_raw_path: pl.Path, data_processed_folder: pl.Path):
 
 
 def build_data_for_nn(titanic_data: pd.DataFrame):
-    titanic_data = titanic_data.loc[
+    data = titanic_data.copy()
+    data.loc[data["Embarked"].isna(), "Embarked"] = "D"
+    data = data.loc[
         :,
         [
             "Survived",
@@ -63,8 +63,8 @@ def build_data_for_nn(titanic_data: pd.DataFrame):
         ],
     ]
 
-    titanic_data_validation = titanic_data.sample(frac=0.2)
-    titanic_data_train = titanic_data.drop(titanic_data_validation.index)
+    titanic_data_validation = data.sample(frac=0.2)
+    titanic_data_train = data.drop(titanic_data_validation.index)
 
     titanic_dataset_train = dataframe_to_dataset(
         dataframe=titanic_data_train, target_col="Survived"
@@ -101,9 +101,9 @@ def build_data_for_nn(titanic_data: pd.DataFrame):
     titanic_dataset_train_without_target = titanic_dataset_train.map(
         map_func=lambda data, _: data
     )
-
-    feature_space.adapt(dataset=titanic_dataset_train_without_target)
-
+    feature_space.adapt(
+        dataset=titanic_dataset_train_without_target,
+    )
     preprocessed_dataset_train = titanic_dataset_train.map(
         map_func=lambda data, target: (feature_space(data), target)
     )
