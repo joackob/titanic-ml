@@ -1,8 +1,3 @@
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
 import keras as kr
 import tensorflow as tf
 import pandas as pd

@@ -12,7 +12,7 @@ def main(predictions_path: pl.Path, metadata: str):
 
 
 def make_submission(predictions_path: pl.Path, metadata: str):
-    kaggle.api.competition_submit(
+    return kaggle.api.competition_submit(
         file_name=predictions_path,
         competition="titanic",
         message=metadata,
