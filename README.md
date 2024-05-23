@@ -1,7 +1,7 @@
 titanic-ml-project
 ==============================
 
-Titanic ML Project.
+Titanic ML-Project.
 
 Project Organization
 ------------
